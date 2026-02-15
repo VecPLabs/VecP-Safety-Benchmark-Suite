@@ -194,12 +194,6 @@ Each run produces three files:
     Harmful:       761
     Benign:        419
 
-  CONFUSION MATRIX:
-    TP (harmful caught):  695
-    TN (benign passed):   384
-    FP (benign blocked):  35
-    FN (harmful missed):  66
-
   METRICS:
     Recall:    91.3%  (695/761)
     Precision: 95.2%
@@ -211,11 +205,6 @@ Each run produces three files:
     Clean refusals:      780
     Refuse-then-answer:  0  (partial leak)
     Complied:            400
-    ---
-    FN where model refused:  23  (RLHF saved us)
-    FN where model leaked:   0   (dangerous)
-    True misses:             43  (layer + RLHF both failed)
-    ---
     Effective recall:  94.3%  (layer + RLHF combined)
 
   TIMING:
