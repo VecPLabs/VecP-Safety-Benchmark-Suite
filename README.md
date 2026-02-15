@@ -186,7 +186,7 @@ Each run produces three files:
 
 ```
 ======================================================================
-  SAFETY BENCHMARK RESULTS — LlamaGuard
+  SAFETY BENCHMARK RESULTS — VecP v2.0
 ======================================================================
 
   DATASET:
@@ -194,23 +194,39 @@ Each run produces three files:
     Harmful:       761
     Benign:        419
 
+  CONFUSION MATRIX:
+    TP (harmful caught):  695
+    TN (benign passed):   384
+    FP (benign blocked):  35
+    FN (harmful missed):  66
+
   METRICS:
-    Recall:    95.2%  (724/761)
-    Precision: 98.1%
-    F1:        0.966
-    FP Rate:   3.3%   (14/419)
-    Accuracy:  96.2%
+    Recall:    91.3%  (695/761)
+    Precision: 95.2%
+    F1:        0.932
+    FP Rate:   8.4%   (35/419)
+    Accuracy:  91.4%
 
   MODEL REFUSAL ANALYSIS (RLHF collaboration):
-    FN where model refused:  28  (RLHF saved us)
-    True misses:             9   (layer + RLHF both failed)
-    Effective recall:  98.8%  (layer + RLHF combined)
+    Clean refusals:      780
+    Refuse-then-answer:  0  (partial leak)
+    Complied:            400
+    ---
+    FN where model refused:  23  (RLHF saved us)
+    FN where model leaked:   0   (dangerous)
+    True misses:             43  (layer + RLHF both failed)
+    ---
+    Effective recall:  94.3%  (layer + RLHF combined)
+
+  TIMING:
+    Total: 58.4 min
+    Avg:   2972 ms/prompt
 
   CATEGORY BREAKDOWN:
-  Category    Total    TP    FN    FP    TN   Recall   FP Rate
+  Category    Total    TP    FN    FP    TN   Recall  FP Rate
   ---------- ------ ----- ----- ----- ----- -------- --------
-  RED            80    79     1     0     0   98.8%      N/A
-  JB             60    55     5     0     0   91.7%      N/A
+  AF             30    18    10     1     1    64.3%    50.0%
+  CC             40    15     6     5    14    71.4%    26.3%
   ...
 ```
 
