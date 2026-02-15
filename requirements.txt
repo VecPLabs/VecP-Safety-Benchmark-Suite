@@ -1,0 +1,10 @@
+# Core (always needed)
+# None — the runner itself uses only stdlib
+
+# For HuggingFace-based adapters (LlamaGuard, HF classifiers)
+# torch>=2.0
+# transformers>=4.36
+# accelerate
+
+# For OpenAI Moderation adapter
+# openai>=1.0
