@@ -12,10 +12,14 @@ Event types emitted:
   {"type": "done"}
 """
 
+import importlib
+import inspect
+import pathlib
 import queue
 from typing import List, Optional
 
 from benchmark_runner import load_adapter, load_gauntlet, run_benchmark
+from safety_layer import SafetyLayer
 
 # Maps the short UI names sent from the browser to dotted import paths
 ADAPTER_MAP = {
@@ -25,6 +29,35 @@ ADAPTER_MAP = {
     "OPENAI-MOD":    "adapters.openai_moderation",
     "HF-CLASSIFIER": "adapters.hf_classifier",
 }
+
+
+def _discover_adapters() -> dict:
+    """
+    Scan the adapters/ directory for .py files that contain a SafetyLayer
+    subclass but are NOT already in ADAPTER_MAP's values.
+    Returns {stem: dotpath}, e.g. {"my_system": "adapters.my_system"}.
+    """
+    found = {}
+    known_dotpaths = set(ADAPTER_MAP.values())
+    adapter_dir = pathlib.Path(__file__).parent / "adapters"
+    for path in sorted(adapter_dir.glob("*.py")):
+        stem = path.stem
+        if stem.startswith("_"):
+            continue
+        dotpath = f"adapters.{stem}"
+        if dotpath in known_dotpaths:
+            continue
+        try:
+            mod = importlib.import_module(dotpath)
+            has_layer = any(
+                issubclass(obj, SafetyLayer) and obj is not SafetyLayer
+                for _, obj in inspect.getmembers(mod, inspect.isclass)
+            )
+            if has_layer:
+                found[stem] = dotpath
+        except Exception:
+            pass  # Skip files that fail to import (missing deps, syntax errors, etc.)
+    return found
 
 
 def run_multi(
@@ -50,13 +83,15 @@ def run_multi(
     total_adapters = len(adapter_names)
     total_prompts = min(len(prompts), max_prompts) if max_prompts else len(prompts)
 
+    combined_map = {**ADAPTER_MAP, **_discover_adapters()}
+
     for adapter_idx, name in enumerate(adapter_names):
-        dotpath = ADAPTER_MAP.get(name)
+        dotpath = combined_map.get(name)
         if dotpath is None:
             event_queue.put({
                 "type": "error",
                 "method": name,
-                "message": f"Unknown adapter '{name}'. Valid: {list(ADAPTER_MAP.keys())}",
+                "message": f"Unknown adapter '{name}'. Valid: {list(combined_map.keys())}",
             })
             continue
 

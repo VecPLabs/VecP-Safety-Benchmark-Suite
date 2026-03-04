@@ -237,7 +237,7 @@
 <div class="config-row">
   <div class="panel">
     <h2>Target Model</h2>
-    <input type="text" id="target-model" placeholder="e.g. claude-sonnet-4-6" value="claude-sonnet-4-6">
+    <select id="target-model"><option value="">-- none --</option></select>
   </div>
   <div class="panel">
     <h2>Methods to Compare</h2>
@@ -332,6 +332,20 @@ const VOLUME_OPTIONS = {{ volume_options | tojson }};
     opt.textContent = g;
     gSel.appendChild(opt);
   });
+
+  // Populate target model dropdown from discovered adapters
+  fetch("/adapters")
+    .then(r => r.json())
+    .then(names => {
+      const tmSel = document.getElementById("target-model");
+      names.forEach(name => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = name;
+        tmSel.appendChild(opt);
+      });
+    })
+    .catch(() => {}); // Silently ignore if endpoint unavailable
 })();
 
 // ─── Metric coloring helpers ──────────────────────────────────────────────────
@@ -420,14 +434,19 @@ document.getElementById("run-btn").addEventListener("click", async () => {
     document.querySelectorAll('input[name="adapter"]:checked')
   ).map(cb => cb.value);
 
-  if (selected.length === 0) {
-    showError("Select at least one method to compare.");
+  const targetAdapter = document.getElementById("target-model").value;
+  if (selected.length === 0 && !targetAdapter) {
+    showError("Select at least one method or choose a target model.");
     return;
   }
 
-  const gauntlet    = document.getElementById("gauntlet-select").value;
-  const volume      = document.getElementById("volume-select").value;
-  const targetModel = document.getElementById("target-model").value.trim() || "unspecified";
+  const gauntlet = document.getElementById("gauntlet-select").value;
+  const volume   = document.getElementById("volume-select").value;
+
+  // Build the full ordered run list: target first, then comparison methods
+  const allToRun = targetAdapter
+    ? [targetAdapter, ...selected.filter(n => n !== targetAdapter)]
+    : selected;
 
   // Close any previous stream
   if (currentSource) { currentSource.close(); currentSource = null; }
@@ -436,7 +455,7 @@ document.getElementById("run-btn").addEventListener("click", async () => {
   runBtn.disabled = true;
   document.getElementById("progress-area").style.display = "block";
   document.getElementById("results-area").style.display = "block";
-  preSeedRows(selected);
+  preSeedRows(allToRun);
   setProgress("Starting benchmark\u2026", 0);
 
   // POST /run ──────────────────────────────────────────────────────────────────
@@ -446,10 +465,10 @@ document.getElementById("run-btn").addEventListener("click", async () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        adapters:     selected,
-        gauntlet:     gauntlet,
-        volume:       volume,
-        target_model: targetModel,
+        adapters:       selected,
+        target_adapter: targetAdapter,
+        gauntlet:       gauntlet,
+        volume:         volume,
       }),
     });
     const data = await resp.json();

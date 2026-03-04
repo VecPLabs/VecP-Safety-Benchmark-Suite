@@ -17,7 +17,7 @@ from pathlib import Path
 
 from flask import Flask, Response, jsonify, render_template, request
 
-from multi_runner import ADAPTER_MAP, run_multi
+from multi_runner import ADAPTER_MAP, _discover_adapters, run_multi
 
 app = Flask(__name__)
 
@@ -49,6 +49,12 @@ def index():
     )
 
 
+@app.route("/adapters")
+def list_adapters():
+    """Return discovered (non-hardcoded) adapter names for the target model dropdown."""
+    return jsonify(sorted(_discover_adapters().keys()))
+
+
 @app.route("/run", methods=["POST"])
 def start_run():
     """
@@ -67,13 +73,22 @@ def start_run():
     body = request.get_json(force=True, silent=True) or {}
 
     selected = body.get("adapters", [])
-    if not selected or not isinstance(selected, list):
-        return jsonify({"error": "Provide at least one adapter in 'adapters' list."}), 400
+    if not isinstance(selected, list):
+        selected = []
 
-    unknown = [a for a in selected if a not in ADAPTER_MAP]
+    # Include target adapter (from dropdown) at the front of the run list
+    target_adapter = str(body.get("target_adapter", "")).strip()
+    if target_adapter and target_adapter not in selected:
+        selected = [target_adapter] + selected
+
+    if not selected:
+        return jsonify({"error": "Provide at least one adapter or select a target model."}), 400
+
+    all_adapters = {**ADAPTER_MAP, **_discover_adapters()}
+    unknown = [a for a in selected if a not in all_adapters]
     if unknown:
         return jsonify({
-            "error": f"Unknown adapters: {unknown}. Valid: {list(ADAPTER_MAP.keys())}"
+            "error": f"Unknown adapters: {unknown}. Valid: {list(all_adapters.keys())}"
         }), 400
 
     gauntlet_name = body.get("gauntlet", VALID_GAUNTLETS[0])
@@ -84,7 +99,7 @@ def start_run():
     if volume_key not in VOLUME_MAP:
         return jsonify({"error": f"Unknown volume '{volume_key}'."}), 400
 
-    target_model = str(body.get("target_model", "")).strip() or "unspecified"
+    target_model = target_adapter or str(body.get("target_model", "")).strip() or "unspecified"
     gauntlet_path = str(GAUNTLET_DIR / gauntlet_name)
     max_prompts = VOLUME_MAP[volume_key]
 
