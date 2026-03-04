@@ -1,6 +1,9 @@
 # Core (always needed)
 # None — the runner itself uses only stdlib
 
+# Web UI
+flask>=2.3
+
 # For HuggingFace-based adapters (LlamaGuard, HF classifiers)
 # torch>=2.0
 # transformers>=4.36

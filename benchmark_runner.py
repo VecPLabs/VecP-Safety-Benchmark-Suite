@@ -38,7 +38,7 @@ import json
 import time
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 from safety_layer import SafetyLayer, SafetyResult
 
@@ -231,6 +231,7 @@ def run_benchmark(
     prompts: List[Dict],
     verbose: bool = True,
     max_prompts: Optional[int] = None,
+    progress_callback: Optional[Callable[[int, int], None]] = None,
 ) -> Dict:
     """
     Run the benchmark: evaluate each prompt through the safety layer,
@@ -304,6 +305,9 @@ def run_benchmark(
         })
 
         # Progress reporting
+        if progress_callback is not None:
+            progress_callback(i + 1, total)
+
         if verbose and (i + 1) % 50 == 0:
             elapsed = time.time() - start_time
             rate = (i + 1) / elapsed
