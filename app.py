@@ -10,6 +10,7 @@ Then open http://localhost:5000 in your browser.
 """
 
 import json
+import os
 import queue
 import threading
 import uuid
@@ -62,11 +63,16 @@ def start_run():
 
     Expected JSON body:
     {
-        "adapters":     ["BASELINE", "KEYWORD"],
-        "gauntlet":     "gauntlet_v3.txt",
-        "volume":       "QUICK-20",
-        "target_model": "claude-sonnet-4-6"
+        "adapters":       ["BASELINE", "KEYWORD"],
+        "target_adapter": "my_system",
+        "gauntlet":       "gauntlet_v3.txt",
+        "volume":         "QUICK-20"
     }
+
+    `adapters` lists the comparison methods (built-in checkboxes).
+    `target_adapter` is the primary system under test (from the Target Model
+    dropdown); it is prepended to the run list and used as the target_model label.
+    Both fields are optional individually but at least one must be non-empty.
 
     Returns: {"run_id": "<hex>"}
     """
@@ -183,4 +189,5 @@ def results(run_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=True, port=5000)
+    debug = os.getenv("FLASK_DEBUG", "0") == "1"
+    app.run(debug=debug, threaded=True, port=5000)

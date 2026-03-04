@@ -15,8 +15,8 @@ Every safety system claims good numbers, but there's no standard way to compare 
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/safety-benchmark-suite.git
-cd safety-benchmark-suite
+git clone https://github.com/VecPLabs/VecP-Safety-Benchmark-Suite.git
+cd VecP-Safety-Benchmark-Suite
 
 # Run with the built-in keyword filter (no dependencies needed)
 python benchmark_runner.py \
@@ -29,6 +29,31 @@ python benchmark_runner.py \
     --gauntlet gauntlets/gauntlet_v3.txt \
     --max-prompts 20
 ```
+
+## Web UI
+
+A browser-based dashboard lets you compare multiple adapters in one run with live progress
+updates and colour-coded results.
+
+```bash
+# Install Flask (one-time)
+pip install flask>=2.3
+
+# Launch the UI
+python app.py
+# → open http://localhost:5000
+```
+
+From the dashboard you can:
+
+- **Target Model** — select any adapter from `adapters/` to benchmark as your primary system under test; it runs first and appears at the top of the results table
+- **Methods to Compare** — check built-in baselines (BASELINE, KEYWORD, LLAMAGUARD, …) to run alongside for comparison
+- **Prompt Volume** — from QUICK-20 to FULL (1,180 prompts)
+- **Dataset Source** — switch between `gauntlet_v3.txt` and `gauntlet_v3_enhanced.txt`
+
+Results stream in live as each adapter finishes. Metrics are colour-coded: green ≥ 85 %, white ≥ 60 %, red below 60 % (reversed for FP rate).
+
+---
 
 ## Writing Your Own Adapter
 
@@ -57,7 +82,11 @@ class MySafetySystem(SafetyLayer):
         return "My Safety System"
 ```
 
-Save it as `adapters/my_system.py` and run:
+Save it as `adapters/my_system.py`. The web UI automatically discovers any adapter you drop
+into `adapters/` — reload the page and `my_system` will appear in the **Target Model**
+dropdown with no configuration needed.
+
+To run from the CLI:
 
 ```bash
 python benchmark_runner.py \

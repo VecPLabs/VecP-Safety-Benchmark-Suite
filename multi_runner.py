@@ -16,6 +16,7 @@ import importlib
 import inspect
 import pathlib
 import queue
+import time
 from typing import List, Optional
 
 from benchmark_runner import load_adapter, load_gauntlet, run_benchmark
@@ -121,7 +122,6 @@ def run_multi(
         callback = make_callback(name, adapter_idx, total_adapters, total_prompts)
 
         # Run benchmark
-        import time
         t0 = time.time()
         try:
             data = run_benchmark(

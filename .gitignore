@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Local environment variables (e.g. OPENAI_API_KEY)
+.env
+
+# Generated benchmark output files
+results_*.json
+results_*.csv
+
+*.log
