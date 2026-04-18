@@ -15,7 +15,7 @@ Every safety system claims good numbers, but there's no standard way to compare 
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/safety-benchmark-suite.git
+git clone https://github.com/VecPLabs/safety-benchmark-suite.git
 cd safety-benchmark-suite
 
 # Run with the built-in keyword filter (no dependencies needed)
